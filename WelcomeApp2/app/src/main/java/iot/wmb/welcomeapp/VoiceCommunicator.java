@@ -3,6 +3,7 @@ package iot.wmb.welcomeapp;
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.ProgressBar;
 
 import com.ibm.iotf.client.device.DeviceClient;
 import com.ibm.watson.developer_cloud.android.speech_common.v1.TokenProvider;
@@ -39,7 +40,8 @@ public class VoiceCommunicator implements ISpeechDelegate {
         IDLE, CONNECTING, CONNECTED
     }
 
-    private Activity activity;
+    private PushMeActivity activity;
+    ProgressBar bar;
     private ConnectionState state = ConnectionState.IDLE;
     private static final String TAG = "VoiceCommunicator";
     private DeviceClient client;
@@ -48,16 +50,17 @@ public class VoiceCommunicator implements ISpeechDelegate {
 
     private static String mRecognitionResults = "";
 
-    public VoiceCommunicator(Activity activity, DeviceClient client){
+    public VoiceCommunicator(PushMeActivity activity, DeviceClient client){
         this.activity = activity;
         this.client = client;
         initTextToSpeech();
         initSTT();
-        startSTT();
+        bar = (ProgressBar)activity.findViewById(R.id.progressBarRec);
     }
 
 
     public void startSTT(){
+        Log.d(TAG, "startSTT: start: state=" + state);
         if (state == ConnectionState.IDLE) {
             state = ConnectionState.CONNECTING;
             Log.d(TAG, "startSTT: IDLE -> CONNECTING");
@@ -71,12 +74,15 @@ public class VoiceCommunicator implements ISpeechDelegate {
                 }
             }.execute();
             startTime = System.nanoTime();
+            bar.setProgress(1000);
         }
         else if (state == ConnectionState.CONNECTED) {
             state = ConnectionState.IDLE;
             Log.d(TAG, "startSTT: CONNECTED -> IDLE");
             SpeechToText.sharedInstance().stopRecognition();
+            bar.setProgress(0);
         }
+        Log.d(TAG, "startSTT: stop");
     }
 
     private void initSTT(){
@@ -121,6 +127,7 @@ public class VoiceCommunicator implements ISpeechDelegate {
     public void onClose(int code, String reason, boolean remote) {
         Log.d(TAG, "onClose, code: " + code + " reason: " + reason);
         Log.i(TAG, "connection closed");
+        bar.setProgress(0);
         state = ConnectionState.IDLE;
     }
 
@@ -171,10 +178,18 @@ public class VoiceCommunicator implements ISpeechDelegate {
     public void onAmplitude(double amplitude, double volume) {
         Log.e(TAG, "amplitude=" + amplitude + ", volume=" + volume);
 
-        if(System.nanoTime() - startTime > 10 * NANOSEC && volume < 70
+        if(System.nanoTime() - startTime > 10 * NANOSEC /*&& volume < 70*/
                 || System.nanoTime() - startTime > 15 * NANOSEC){
-            Log.d(TAG, "unregister");
-            client.publishEvent("dialog", lastMsg);
+            new AsyncTask<Void, Void, Void>(){
+                @Override
+                protected Void doInBackground(Void... none) {
+                    Log.i(TAG, "onAmplitude: I send msg to server: " + lastMsg);
+                    client.publishEvent("dialog", lastMsg);
+                    activity.stopSpeechToText();
+                    Log.d(TAG, "onAmplitude: end");
+                    return null;
+                }
+            }.execute();
         }
     }
 

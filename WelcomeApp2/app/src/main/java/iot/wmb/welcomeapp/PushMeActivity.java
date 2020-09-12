@@ -48,7 +48,35 @@ public class PushMeActivity extends AppCompatActivity {
             Toast.makeText(this, "Ilegall state of app!", Toast.LENGTH_LONG).show();
         }
 
+        robome.startListening();
+     //   startSpeechToText();
        // voiceCom.startRecognizing();
+    }
+
+    public void startSpeechToText(){
+        Log.d(TAG, "startSpeechToText: start");
+        new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected Void doInBackground(Void... none) {
+                Log.d(TAG, "startSpeechToText: start");
+                robome.stopListening();
+                while(robome.isListening()){
+                    Log.d(TAG, "startSpeechToText: waiting");
+                }
+                Log.d(TAG, "startSpeechToText: continue");
+                voiceCom.startSTT();
+                Log.d(TAG, "startSpeechToText: end");
+                return null;
+            }
+        }.execute();
+        Log.d(TAG, "startSpeechToText: stop");
+    }
+
+    public void stopSpeechToText(){
+        Log.d(TAG, "stopSpeechToText: start");
+        SpeechToText.sharedInstance().stopRecognition();
+        robome.startListening();
+        Log.d(TAG, "stopSpeechToText: stop");
     }
 
 
@@ -58,7 +86,6 @@ public class PushMeActivity extends AppCompatActivity {
         super.onResume();
         // set media volume to 12
         robome.setVolume(15);
-        robome.startListening();
     }
 
     public void onEnd(View view){

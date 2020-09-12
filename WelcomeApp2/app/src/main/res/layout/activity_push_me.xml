@@ -108,6 +108,19 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:id="@+id/progressBarRec"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:max="500"
+        android:progress="0"
+        android:progressDrawable="@drawable/circ"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
     <Switch
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -117,7 +130,7 @@
         android:layout_centerHorizontal="true"
         android:enabled="true"
         android:rotation="90"
-        android:onClick="onEnd" />
+        android:onClick="onEnd"/>
 
     <TextView
         android:layout_width="wrap_content"

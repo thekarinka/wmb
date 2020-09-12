@@ -14,10 +14,10 @@ import com.wowwee.robome.RoboMeCommands;
 public class Robotic implements RoboMe.RoboMeListener {
 
     private RoboMe robome;
-    private Context context;
+    private PushMeActivity context;
     private DeviceClient deviceClient;
 
-    public Robotic(Context context, DeviceClient client) {
+    public Robotic(PushMeActivity context, DeviceClient client) {
         robome = new RoboMe(context, this);
         this.context = context;
         this.deviceClient = client;
@@ -31,7 +31,20 @@ public class Robotic implements RoboMe.RoboMeListener {
     public void commandReceived(RoboMeCommands.IncomingRobotCommand incomingRobotCommand) {
         final String TAG = "Proximity";
         Log.d(TAG, "commandReceived: " + incomingRobotCommand);
-        if(incomingRobotCommand.isSensorStatus()){
+        if(incomingRobotCommand.isHandshakeStatus()){
+            Log.d(TAG, "commandReceived: handshake");
+            JsonObject event = new JsonObject();
+            event.addProperty("event", "init_start");
+
+            int qos = 2;
+            deviceClient.publishEvent("init_start", event, qos);
+
+            context.startSpeechToText();
+
+            Log.d(TAG, "commandReceived: stop listening");
+        }
+
+       /* if(incomingRobotCommand. isSensorStatus()){
             if(incomingRobotCommand.readSensorStatus().edge)
                 Log.d(TAG, "edge");
                 //deviceClient.publishEvent(null, null);
@@ -43,6 +56,8 @@ public class Robotic implements RoboMe.RoboMeListener {
 
                 int qos = 2;
                 deviceClient.publishEvent("init_start", event, qos);
+                robome.stopListening();
+                Log.d(TAG, "commandReceived: stop listening on robome");
             }
             else if (incomingRobotCommand.readSensorStatus().chest_50cm)
                 Log.d(TAG, "50cm");
@@ -50,9 +65,7 @@ public class Robotic implements RoboMe.RoboMeListener {
             else if(incomingRobotCommand.readSensorStatus().chest_100cm)
                 Log.d(TAG, "100cm");
                 //deviceClient.publishEvent(null, null);
-        }
-
-        //TODO implement
+        }*/
     }
 
     @Override
